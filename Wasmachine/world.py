@@ -36,4 +36,4 @@ from wasmachine import *
 from timing import *
 
 
-World (wasmachine (), Timing ())
+World (wasmachine ()) #, Timing ())
