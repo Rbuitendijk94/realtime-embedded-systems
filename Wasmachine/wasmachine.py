@@ -72,13 +72,12 @@ class wasmachine (Module):
         self.trommelSnelheid.set(0, self.hoeveelheidWater <0.1)
         self.uitspoelenVoorprogramma.mark(True, self.timerVoorprogramma >1.5 and self.pompOpen == False)
         self.kraanOpen.mark(True, self.uitspoelenVoorprogramma and self.hoeveelheidWater <10 and self.trommelSnelheid ==0 and self.timerUitspoelenVoorprogramma <3)
-        self.timerUitspoelenVoorprogramma.reset(self.uitspoelenVoorprogramma == False)
-
+        self.timerUitspoelenVoorprogramma.reset(self.uitspoelenVoorprogramma == False and self.voorProgrammaKlaar == False)
         self.trommeldraait.mark(True, self.trommelSnelheid ==10 and self.uitspoelenVoorprogramma and self.hoeveelheidWater==10)
         self.trommeldraait.mark(False, self.timerUitspoelenVoorprogramma >2 and self.voorwasprogramma and self.uitspoelenVoorprogramma)#TIMER ANDERS ISNTELLEN
-
-        self.pompOpen.mark(True, self.timerUitspoelenVoorprogramma >2 and self.uitspoelenVoorprogramma)#TIMER ANDERS ISNTELLEN
-
+        self.pompOpen.mark(True, self.timerUitspoelenVoorprogramma >2 and self.uitspoelenVoorprogramma and self.voorProgrammaKlaar == False)#TIMER ANDERS ISNTELLEN
+        self.pompOpen.mark(False, self.hoeveelheidWater <0.1 )
+        self.voorProgrammaKlaar.mark(True, self.hoeveelheidWater <0.1 and self.uitspoelenVoorprogramma and self.timerUitspoelenVoorprogramma >5)
 
 
 
