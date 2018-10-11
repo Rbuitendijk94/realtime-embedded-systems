@@ -3,20 +3,51 @@ from SimPyLC import *
 class lift (Module):
     def __init__ (self):
         Module.__init__ (self)
-        self.mijnTimer = Timer()
-        self.motorAan = Marker(True) # true motoraan false motoruit
-        self.positieLift = Register() # waar bevind lift zich nu getal tussen -1 en 3
-        self.gewensteVerdieping = Register() #getal tussen -1 en 3
+        self.knopDeurOpen = Marker(False)
 
-        self.snelheidLift = Register() #snelheid van de lift
-        self.noodknop = Marker(False)
+        self.motorAan = Marker(False)
+        self.richtingMotor = Marker()
+        self.positieLift = Register()
+        self.doeDeurDicht = Marker(True)
+        self.deurVergrendeld = Marker(False)
+        self.Timerdeurvergrendelen = Timer()
+        self.sensor = Marker(False)
 
 
     def sweep (self):
-        self.motorAan.mark( False, self.noodknop)
-        self.snelheidLift.set(0.2)
-        self.snelheidLift.set(0,self.positieLift %1 ==1)
-        self.positieLift.set(self.positieLift + self.snelheidLift,(self.mijnTimer % 1)>0.95)# ,((self.mijnTimer % 1) ==1))
+        self.positieLift.set( self.positieLift + 0.02, self.motorAan and self.richtingMotor)
+        self.positieLift.set( self.positieLift - 0.02, self.motorAan and self.richtingMotor == False)
+
+        #deur vergrendelen
+        self.doeDeurDicht.mark(False, self.sensor or self.knopDeurOpen or self.deurVergrendeld)
+        self.Timerdeurvergrendelen.reset(self.doeDeurDicht == False)
+        self.deurVergrendeld.mark(True, self.Timerdeurvergrendelen > 2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
