@@ -15,6 +15,7 @@ class lift (Module):
         #knoppen op verdieping
         self.roepLift = Marker()
         self.roepLiftVerdieping = Register(3)
+        self.deurOpen = Marker(False)
 
         self.motorAan = Marker(False)
         self.richtingMotor = Marker()
@@ -22,6 +23,7 @@ class lift (Module):
         self.doeDeurDicht = Marker(True)
         self.deurVergrendeld = Marker(False)
         self.Timerdeurvergrendelen = Timer()
+        self.TimerDeurOpen = Timer()
         self.sensor = Marker(False)
 
 
@@ -29,27 +31,27 @@ class lift (Module):
 
         #deur vergrendelen
         self.doeDeurDicht.mark(True, self.knopDeurDicht)
+        self.deurVergrendeld.mark(False, self.doeDeurDicht)
         self.doeDeurDicht.mark(False, self.sensor or self.knopDeurOpen or self.deurVergrendeld)
         self.Timerdeurvergrendelen.reset(self.doeDeurDicht == False)
         self.deurVergrendeld.mark(True, self.Timerdeurvergrendelen > 2)
-
+        self.doeDeurDicht.mark(False, self.deurVergrendeld)
 
         #deur naar knopVerdieping
         self.richtingMotor.mark(False ,( self.positieLift > self.roepLiftVerdieping)== True)
         self.richtingMotor.mark(True , (self.positieLift < self.roepLiftVerdieping)== True)
-        self.motorAan.mark(True,self.positieLift != self.roepLiftVerdieping and self.deurVergrendeld  and self.knopNood == False, False)
-        self.positieLift.set( self.positieLift + 0.02, self.motorAan and self.richtingMotor)
-        self.positieLift.set( self.positieLift - 0.02, self.motorAan and self.richtingMotor == False)
-        self.deurVergrendeld.mark(False,self.positieLift > self.roepLiftVerdieping and self.richtingMotor ) # als lift naar boven gaat
-        self.deurVergrendeld.mark(False,self.positieLift < self.roepLiftVerdieping and self.richtingMotor == False) # als lift naar beneden gaat
-        #doordat er geen timer zit op de snelheid haalt hij nu vergrendeling van de deur eraf
+        self.motorAan.mark(True,(self.positieLift *0.99> self.roepLiftVerdieping or self.positieLift *1.01 < self.roepLiftVerdieping )and self.deurVergrendeld  and self.knopNood == False, False)
+        self.positieLift.set( self.positieLift + 0.02, self.motorAan and self.richtingMotor, self.positieLift)
+        self.positieLift.set( self.positieLift - 0.02, self.motorAan and self.richtingMotor == False, self.positieLift)
 
 
-        
-
-
-
-
+        #deur open
+        self.deurOpen.mark(True, (self.positieLift *0.99< self.roepLiftVerdieping or self.positieLift *1.01> self.roepLiftVerdieping ) and self.motorAan == False and self.doeDeurDicht == False , False )
+        self.deurVergrendeld.mark(False, self.deurOpen )
+        self.TimerDeurOpen.reset( self.deurOpen == False or self.deurVergrendeld )
+        self.deurOpen.mark(False, self.doeDeurDicht and self.TimerDeurOpen >3)
+        self.doeDeurDicht.mark(True, self.TimerDeurOpen >3)
+        #zodra hij op de verdieping is zal de deur steeds weer open gaan tenzij verdieping wordt veranderd
 
 
 
