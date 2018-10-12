@@ -28,6 +28,9 @@ class lift (Module):
 
 
     def sweep (self):
+        #logica
+        self.positieLift.set(3, self.positieLift>3)
+        self.positieLift.set(-1, self.positieLift <-1)
 
         #deur vergrendelen
         self.doeDeurDicht.mark(True, self.knopDeurDicht)
@@ -40,9 +43,11 @@ class lift (Module):
         #deur naar knopVerdieping
         self.richtingMotor.mark(False ,( self.positieLift > self.roepLiftVerdieping)== True)
         self.richtingMotor.mark(True , (self.positieLift < self.roepLiftVerdieping)== True)
-        self.motorAan.mark(True,(self.positieLift *0.99> self.roepLiftVerdieping or self.positieLift *1.01 < self.roepLiftVerdieping )and self.deurVergrendeld  and self.knopNood == False, False)
-        self.positieLift.set( self.positieLift + 0.02, self.motorAan and self.richtingMotor, self.positieLift)
-        self.positieLift.set( self.positieLift - 0.02, self.motorAan and self.richtingMotor == False, self.positieLift)
+        self.motorAan.mark(True, self.positieLift > self.roepLiftVerdieping or  self.positieLift < self.roepLiftVerdieping, False )
+        self.motorAan.mark(False, self.deurVergrendeld == False or self.knopNood)
+        self.motorAan.mark(False,(self.positieLift +0.02> self.roepLiftVerdieping and self.positieLift -0.02 < self.roepLiftVerdieping ))
+        self.positieLift.set( self.positieLift + 0.02, self.motorAan and self.richtingMotor)
+        self.positieLift.set( self.positieLift - 0.02, self.motorAan and self.richtingMotor == False)
 
 
         #deur open
