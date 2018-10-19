@@ -22,14 +22,14 @@ class containerkraan (Module):
         self.gewichtAanwezig = Marker()
         self.spreaderPositie = Register(5) # Z poositie
 
-        self.knopGo= Marker()
+        self.knopGo= Marker(True)
         self.knopNood = Marker()
         self.oppakXcoordinaat = Register(8)
         self.oppakYcoordinaat = Register(2)
         self.oppakZcoordinaat = Register(1)
         self.gewenstXcoordinaat= Register(3)
         self.gewenstYcoordinaat= Register(3)
-        self.gewenstZcoordinaat = Register()
+        self.gewenstZcoordinaat = Register(2)
 
     def sweep (self):
         #noodknop stop alles
@@ -46,7 +46,8 @@ class containerkraan (Module):
         self.loopkatPositie.set(0, self.loopkatPositie<0)
         self.spreaderPositie.set(1 ,self.spreaderPositie <1)
 
-        #overige logica
+        #overige logica'=
+
         self.motorSpreader.mark(False, self.motorKraan or self.motorLoopkat)
         self.klauwenOpen.mark(False, self.gewichtAanwezig and self.spreaderPositie != self.gewenstZcoordinaat)
 
@@ -67,18 +68,20 @@ class containerkraan (Module):
 
 
         #spreader
-        self.motorSpreader.mark(True, self.knopGo and self.spreaderPositie != self.oppakZcoordinaat and self.oppakXcoordinaat == self.kraanPositie and self.oppakYcoordinaat == self.loopkatPositie)
+        self.motorSpreader.mark(True, self.knopGo and self.spreaderPositie != self.oppakZcoordinaat and self.oppakXcoordinaat == self.kraanPositie and self.oppakYcoordinaat == self.loopkatPositie and self.oppakkenContainer)
         self.motorSpreader.mark(False, self.spreaderPositie == self.oppakZcoordinaat and self.gewichtAanwezig == False)
         self.motorSpreader.mark(False ,self.oppakkenContainer== False and self.gewichtAanwezig) #deze
-        self.spreaderPositie.set(self.spreaderPositie -0.25 , self.motorSpreader and self.richtingSpreader == False and self.gewichtAanwezig == False,  self.spreaderPositie)
+        self.spreaderPositie.set(self.spreaderPositie -0.25 ,self.knopGo and self.motorSpreader and self.richtingSpreader == False and self.gewichtAanwezig == False,  self.spreaderPositie)
         self.klauwenOpen.mark(True,self.gewichtAanwezig == False and self.spreaderPositie != self.oppakZcoordinaat )
-        self.richtingSpreader.mark(False,self.spreaderPositie > self.oppakZcoordinaat )
-        self.richtingSpreader.mark(True,self.spreaderPositie < self.oppakZcoordinaat or (self.gewichtAanwezig == True  and self.oppakkenContainer))
-        self.klauwenOpen.mark(False,self.knopGo and self.spreaderPositie == self.oppakZcoordinaat and self.oppakXcoordinaat ==  self.kraanPositie and self.loopkatPositie == self.oppakYcoordinaat)
+        self.richtingSpreader.mark(False,self.spreaderPositie > self.oppakZcoordinaat and self.oppakkenContainer)
+        self.richtingSpreader.mark(True,self.gewichtAanwezig == True  and self.oppakkenContainer and self.spreaderPositie < 5) #self.spreaderPositie < self.oppakZcoordinaat or (
+        self.klauwenOpen.mark(False,  self.spreaderPositie == self.oppakZcoordinaat and self.oppakXcoordinaat ==  self.kraanPositie and self.loopkatPositie == self.oppakYcoordinaat)
         self.gewichtAanwezig.mark(True, self.spreaderPositie == self.oppakZcoordinaat and self.oppakXcoordinaat ==  self.kraanPositie and self.loopkatPositie == self.oppakYcoordinaat and self.klauwenOpen == False)
         self.spreaderPositie.set(self.spreaderPositie +0.25 , self.motorSpreader and self.richtingSpreader and self.gewichtAanwezig,  self.spreaderPositie)
         self.oppakkenContainer.mark(False, self.spreaderPositie == 5 and self.gewichtAanwezig)
 
+
+#-----------------------------------------------------------brengen naar nieuwe locatiee
 
         #kraan naar bestemming brengen
         self.motorKraan.mark(True, self.knopGo and self.kraanPositie != self.gewenstXcoordinaat and self.spreaderPositie ==5 and self.oppakkenContainer == False, False)
@@ -94,11 +97,24 @@ class containerkraan (Module):
         self.loopkatPositie.set(self.loopkatPositie +0.25 , self.motorLoopkat and self.richtingLoopkat,  self.loopkatPositie)
         self.loopkatPositie.set(self.loopkatPositie -0.25 , self.motorLoopkat and self.richtingLoopkat == False, self.loopkatPositie)
 
-#-----------------------------------------------------------brengen naar nieuwe locatiee
+        #spreader
+        self.motorSpreader.mark(True, self.knopGo and self.spreaderPositie != self.gewenstZcoordinaat and self.gewenstXcoordinaat == self.kraanPositie and self.gewenstYcoordinaat == self.loopkatPositie and self.oppakkenContainer == False)
+        self.motorSpreader.mark(False, self.spreaderPositie == self.gewenstZcoordinaat and self.gewichtAanwezig)
+        self.motorSpreader.mark(False, self.gewichtAanwezig == False and self.oppakkenContainer == False and self.spreaderPositie == 5)
+        self.richtingSpreader.mark(False,self.spreaderPositie > self.gewenstZcoordinaat )
+        self.spreaderPositie.set(self.spreaderPositie -0.25 , self.motorSpreader and self.richtingSpreader == False and self.gewichtAanwezig and self.oppakkenContainer == False and self.gewenstXcoordinaat == self.kraanPositie and self.gewenstYcoordinaat == self.loopkatPositie    ,  self.spreaderPositie)
+        self.klauwenOpen.mark(True,self.gewichtAanwezig == True and self.spreaderPositie == self.gewenstZcoordinaat )
+        self.gewichtAanwezig.mark(False, self.spreaderPositie == self.gewenstZcoordinaat and self.gewenstXcoordinaat ==  self.kraanPositie and self.loopkatPositie == self.gewenstYcoordinaat and self.klauwenOpen)
+        self.richtingSpreader.mark(True,self.gewichtAanwezig == False  and self.oppakkenContainer == False and self.spreaderPositie < 5 and self.knopGo) #self.spreaderPositie < self.oppakZcoordinaat or (
+        self.spreaderPositie.set(self.spreaderPositie +0.25 , self.motorSpreader and self.richtingSpreader and self.gewichtAanwezig == False,  self.spreaderPositie)
+        self.knopGo.mark(False, self.spreaderPositie == 5 and self.gewichtAanwezig == False and self.oppakkenContainer == False)
+        self.oppakkenContainer.mark(True, self.knopGo == False and self.kraanPositie == self.gewenstXcoordinaat and self.loopkatPositie == self.gewenstYcoordinaat)
+    #
+'''
+        #spreader
+         self.richtingSpreader.mark(True,self.spreaderPositie < self.gewenstZcoordinaat or (self.gewichtAanwezig == False  and self.oppakkenContainer== False))
 
-
-
-
-
+        self.knopGo.mark(False, self.spreaderPositie == 5 and self.gewichtAanwezig == False)
         #overige logica
     #    self.knopGo.mark(False, self.kraanPositie == self.gewenstXcoordinaat and self.loopkatPositie == self.gewenstYcoordinaat and self.spreaderPositie == self.gewenstZcoordinaat)
+'''
