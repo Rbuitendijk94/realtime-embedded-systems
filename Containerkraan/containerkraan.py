@@ -53,9 +53,9 @@ class containerkraan (Module):
 
 ##---------------------------------------------------- oppakken
         #Kraan naar container
-        self.motorKraan.mark(True, self.knopGo and self.kraanPositie != self.oppakXcoordinaat and self.spreaderPositie ==5, False)
-        self.richtingKraan.mark(True, self.kraanPositie < self.oppakXcoordinaat)
-        self.richtingKraan.mark(False, self.kraanPositie > self.oppakXcoordinaat)
+        self.motorLoopkat.mark(True, self.knopGo and self.kraanPositie != self.oppakXcoordinaat and self.oppakkenContainer,False)
+        self.richtingKraan.mark(True, self.kraanPositie < self.oppakXcoordinaat )
+        self.richtingKraan.mark(False, self.kraanPositie > self.oppakXcoordinaat )
         self.kraanPositie.set(self.kraanPositie +0.25 , self.motorKraan and self.richtingKraan and self.oppakkenContainer,  self.kraanPositie)
         self.kraanPositie.set(self.kraanPositie -0.25 , self.motorKraan and self.richtingKraan == False and self.oppakkenContainer, self.kraanPositie)
 
@@ -84,8 +84,8 @@ class containerkraan (Module):
 #-----------------------------------------------------------brengen naar nieuwe locatiee
 
         #kraan naar bestemming brengen
-        self.motorKraan.mark(True, self.knopGo and self.kraanPositie != self.gewenstXcoordinaat and self.spreaderPositie ==5 and self.oppakkenContainer == False, False)
-        self.richtingKraan.mark(True, self.kraanPositie < self.gewenstXcoordinaat)
+        self.motorKraan.mark(True, self.knopGo and self.kraanPositie != self.gewenstXcoordinaat and self.spreaderPositie ==5, False)
+        self.richtingKraan.mark(True, self.kraanPositie < self.gewenstXcoordinaat )
         self.richtingKraan.mark(False, self.kraanPositie > self.gewenstXcoordinaat)
         self.kraanPositie.set(self.kraanPositie +0.25 , self.motorKraan and self.richtingKraan and self.oppakkenContainer == False,  self.kraanPositie)
         self.kraanPositie.set(self.kraanPositie -0.25 , self.motorKraan and self.richtingKraan  == False and self.oppakkenContainer == False, self.kraanPositie)
@@ -109,6 +109,7 @@ class containerkraan (Module):
         self.spreaderPositie.set(self.spreaderPositie +0.25 , self.motorSpreader and self.richtingSpreader and self.gewichtAanwezig == False,  self.spreaderPositie)
         self.knopGo.mark(False, self.spreaderPositie == 5 and self.gewichtAanwezig == False and self.oppakkenContainer == False)
         self.oppakkenContainer.mark(True, self.knopGo == False and self.kraanPositie == self.gewenstXcoordinaat and self.loopkatPositie == self.gewenstYcoordinaat)
+        self.motorSpreader.mark(False, self.knopGo== False)
     #
 '''
         #spreader
