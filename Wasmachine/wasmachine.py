@@ -4,114 +4,107 @@ class wasmachine (Module):
     def __init__ (self):
         Module.__init__ (self)
 
-        self.startKnop = Marker(False) #true starten , false stop
+        self.startKnop = Marker(True) #true starten , false stop
         self.deurOpen = Marker(False)  #true dicth false open
         self.programmakeuzeKnop= Register() # getal 0 tot 3 0 = katoen , 1 = wol, 2, zijde, 3 = syntetisch
         self.draaiProgramma = Register() # getal 0 tot 3 0 = katoen , 1 = wol, 2, zijde, 3 = syntetisch
-        self.voorwasKnop = Marker(True)
+        self.voorwasKnop = Marker(False)
+        self.temperatuurKnop= Register(16)
 
-        self.warmteElement = Marker(False) # true aan, false uit
-        self.pompOpen = Marker(False) # true aan , false uit
         self.trommelSnelheid =Register() # % in snelheid
         self.trommeldraait = Marker(False) # true aan, false uit
-        self.temperatuurWater = Register(15) # temperatuur van he waterWater
+
+        self.pompOpen = Marker(False) # true aan , false uit
         self.kraanOpen = Marker(False) #true open, false dicht
-
-        self.hoeveelheidWater = Register(5) # aantal liter water in de wasmachine max 20
-        self.hoofdProgramma = Marker()
-        self.zeepHoofdprogramma= Register(10)
-
-
-
+        self.warmteElement = Marker(False) # true aan, false uit
+        self.hoeveelheidWater = Register(10) # aantal liter water in de wasmachine max 20
+        self.temperatuurWater = Register(15) # temperatuur van he waterWater
 
         self.voorwasprogramma = Marker() # true starten , false niet doen
         self.zeepVoorwas = Marker()
-        self.timerVoorprogrammaStart = Marker(False)
+        self.voorwassen = Marker  (False)
+        self.voorwassenCompleet= Marker(False)
         self.timerVoorprogramma = Timer()
-        self.voorProgrammaKlaar = Marker(False)
+
+        self.uitspoelen = Marker  (False)
+        self.uitspeolenCompleet = Marker(False)
         self.uitspoelenVoorprogramma = Marker(False)
-        self.timerUitspoelenVoorprogramma = Timer()
+        self.timerUitspoelen = Timer()
+
+        self.hoofdProgramma = Marker(True)
+        self.zeepHoofdprogramma= Marker(True)
+
+        self.hoofdwassen = Marker(False)
+        self.hoofdwassenCompleet = Marker(False)
+        self.timerHoofdprogramma = Timer()
+        self.centrifugeren= Marker(False)
+        self.centrifugerenCompleet = Marker(False)
+        self.timerCentrifugeren = Timer()
+
 
 
     def sweep (self):
-        #self.pompOpen.mark(True, self.startKnop)
-        self.hoeveelheidWater.set(self.hoeveelheidWater + 0.1, self.kraanOpen , self.hoeveelheidWater)
-        self.hoeveelheidWater.set(self.hoeveelheidWater - 0.1, self.pompOpen , self.hoeveelheidWater)
-        self.hoeveelheidWater.set(20, self.hoeveelheidWater >20)
-        self.hoeveelheidWater.set(0, self.hoeveelheidWater <0)
-        self.temperatuurWater.set((2.5/self.hoeveelheidWater)+self.temperatuurWater, self.warmteElement, self.temperatuurWater) #/wordrt 1.5
 
-
-        self.deurOpen.mark(True, self.hoeveelheidWater >0 or self.trommeldraait)
-        self.trommeldraait.mark(False, self.deurOpen)
-        self.pompOpen.mark(False, self.hoeveelheidWater<0)
-        self.startKnop.mark(False ,self.deurOpen)
-        self.draaiProgramma.set(self.programmakeuzeKnop, self.startKnop ==False)
-        self.startKnop.mark(False, self.draaiProgramma == self.programmakeuzeKnop, False)
-
-        self.temperatuurWater.set(60, self.temperatuurWater> 60 and self.programmakeuzeKnop == 1)
-        self.temperatuurWater.set(40, self.temperatuurWater> 40 and self.programmakeuzeKnop == 2)
-        self.temperatuurWater.set(40, self.temperatuurWater> 40 and self.programmakeuzeKnop == 0)
-        self.temperatuurWater.set(40, self.temperatuurWater> 40 and self.programmakeuzeKnop == 3)
-
-        #voorwasprogramma
+        self.temperatuurWater.set(self.temperatuurWater + ((world.period*3) / 4.2), self.warmteElement)
+        self.temperatuurWater.set(self.temperatuurKnop, self.temperatuurWater> self.temperatuurKnop and self.warmteElement)
+        self.warmteElement.mark(False, self.temperatuurKnop == self.temperatuurWater)# bi elke zetten
+        self.temperatuurWater.set(15, self.hoeveelheidWater ==0)
+        self.deurOpen.mark(False, self.hoeveelheidWater!= 0 or self.trommeldraait)
+        self.kraanOpen.mark(False, self.deurOpen)
+        self.pompOpen.mark(False, self.kraanOpen)
+        self.voorwasprogramma.mark(False, self.deurOpen)
+        self.hoofdProgramma.mark(False, self.deurOpen)
+        self.draaiProgramma.set(self.programmakeuzeKnop, self.draaiProgramma != self.programmakeuzeKnop)
+        self.temperatuurKnop.set(60, self.temperatuurKnop > 60 and self.programmakeuzeKnop == 1)
+        self.temperatuurKnop.set(40, self.temperatuurKnop > 40 and self.programmakeuzeKnop == 2)
         self.voorwasprogramma.mark(True, self.voorwasKnop and self.startKnop)
-        self.zeepVoorwas.mark(True, self.voorwasprogramma)
-        self.kraanOpen.mark(True, self.zeepVoorwas and self.hoeveelheidWater <10 and( self.timerVoorprogramma) <3,False) #TIMER ANDERS ISNTELLEN
-        self.hoeveelheidWater.set(10, self.hoeveelheidWater >10 and self.voorwasprogramma and self.voorProgrammaKlaar == False)
-        self.warmteElement.mark(True, self.hoeveelheidWater ==10 and self.voorwasprogramma and self.voorProgrammaKlaar == False)
-        self.warmteElement.mark(False,(self.programmakeuzeKnop ==1 and self.temperatuurWater ==60)or self.temperatuurWater == 40 and self.voorwasprogramma )
-        self.trommelSnelheid.set(10,self.hoeveelheidWater == 10 and self.voorwasprogramma and self.warmteElement == False)
-        self.trommeldraait.mark(True, self.trommelSnelheid ==10 and self.voorwasprogramma)
-        self.timerVoorprogrammaStart.mark(True, self.trommelSnelheid == 10 and self.voorwasprogramma)
-        self.timerVoorprogramma.reset(self.timerVoorprogrammaStart == False )
-        self.trommeldraait.mark(False, self.timerVoorprogramma >3 and self.voorwasprogramma)#TIMER ANDERS ISNTELLEN
-        self.pompOpen.mark(True, self.timerVoorprogramma >1.5 and self.uitspoelenVoorprogramma == False and self.voorwasprogramma)#TIMER ANDERS ISNTELLEN
-        self.pompOpen.mark(False, self.hoeveelheidWater <0.1 and self.voorwasprogramma )
-        self.trommelSnelheid.set(0, self.hoeveelheidWater <0.1 and self.voorwasprogramma)
-        self.uitspoelenVoorprogramma.mark(True, self.timerVoorprogramma >1.5 and self.pompOpen == False and self.voorwasprogramma)
-        self.kraanOpen.mark(True, self.uitspoelenVoorprogramma and self.hoeveelheidWater <10 and self.trommelSnelheid ==0 and self.timerUitspoelenVoorprogramma <3 and self.voorwasprogramma)
-        self.timerUitspoelenVoorprogramma.reset(self.uitspoelenVoorprogramma == False and self.voorProgrammaKlaar == False )
-        self.trommeldraait.mark(True, self.trommelSnelheid ==10 and self.uitspoelenVoorprogramma and self.hoeveelheidWater==10 and self.voorwasprogramma)
-        self.trommeldraait.mark(False, self.timerUitspoelenVoorprogramma >2 and self.voorwasprogramma and self.uitspoelenVoorprogramma and self.voorwasprogramma)#TIMER ANDERS ISNTELLEN
-        self.pompOpen.mark(True, self.timerUitspoelenVoorprogramma >2 and self.uitspoelenVoorprogramma and self.voorProgrammaKlaar == False and self.voorwasprogramma)#TIMER ANDERS ISNTELLEN
-        self.pompOpen.mark(False, self.hoeveelheidWater <0.1 and self.voorProgrammaKlaar == False and self.voorwasprogramma)
-        self.voorProgrammaKlaar.mark(True, self.hoeveelheidWater <0.1 and self.uitspoelenVoorprogramma and self.timerUitspoelenVoorprogramma >5 and self.voorwasprogramma)
-        self.timerUitspoelenVoorprogramma.reset(self.voorProgrammaKlaar == True )
-        self.timerVoorprogramma.reset(self.voorProgrammaKlaar == True)
+        self.hoofdProgramma.mark(True, self.voorwasKnop == False and self.startKnop)
 
-        #start hoofdProgramma
-        self.hoofdProgramma.mark(True, self.startKnop and (self.voorwasKnop == False or self.voorProgrammaKlaar))
+        self.pompOpen.mark(True, self.startKnop and self.hoeveelheidWater >0 and self.zeepVoorwas == False and self.voorwassen == False and self.uitspoelen ==False and self.voorwasprogramma)
+        #voorwasprogramma
 
-'''
-        #start hoofdporgramma
-        self.hoofdProgramma.mark(True, self.voorwasprogramm == False and self.startKnop)
-        self.zeepHoofdprogramma.set(self.zeepHoofdprogramma-0.1, self.hoofdProgramma, self.zeepHoofdprogramma )
-        self.zeepHoofdprogramma.set(0 , self.zeepHoofdprogramma <0)
-        self.kraanOpen.mark(True, self.zeepHoofdprogramma ==0 and self.hoofdProgramma)
-        self.hoeveelheidWater.set(self.hoeveelheidWater + 0.2, self.hoeveelheidWater <10 and self.zeepHoofdprogramma ==0 and self.kraanOpen)
-        self.kraanOpen.mark(False, self.hoeveelheidWater == 10)
-        #zet timer voor wol of zijde op 2 minuten
-        # zet timer voor katoen of  syntetisch op 3 min
-        #self.trommelSnelheid.set(20, self.draaiProgramma == 0, 10)
-    #    self.trommelSnelheid.set(0, self.timerKlaar)# timer voorbij is
-    #    self.trommeldraait.mark(False, self.hoofdProgramma and self.timerKlaar ==False and self.zeepHoofdprogramma <0 and self.trommelSnelheid != 0)
-    #    self.pompOpen.mark(True, self.hoofdProgramma and self.zeepHoofdprogramma > 0 and self.timerKlaar and self.hoeveelheidWater <0.2 and self.kraanOpen)
-'''
+        self.voorwasprogramma.mark(False, self.uitspeolenCompleet and self.hoeveelheidWater ==0)
+        self.zeepVoorwas.mark(True, self.voorwasprogramma and self.startKnop and self.pompOpen== False and self.hoeveelheidWater == 0 and self.voorwasprogramma)
+        self.voorwassen.mark(True,   self.zeepVoorwas and self.voorwasprogramma)
+        self.voorwassen.mark(False, self.voorwassenCompleet and self.voorwasprogramma)
+        self.kraanOpen.mark(True, self.zeepVoorwas and self.voorwasprogramma and self.voorwassenCompleet == False and self.pompOpen == False and self.voorwassen and self.voorwasprogramma)
+        self.hoeveelheidWater.set(10, self.hoeveelheidWater>10 and self.kraanOpen and self.voorwassen and self.voorwasprogramma)
+        self.kraanOpen.mark(False, self.hoeveelheidWater == 10 and self.voorwassen  and self.voorwasprogramma)
+        self.warmteElement.mark(True, self.hoeveelheidWater ==10 and self.kraanOpen == False and self.pompOpen == False and self.voorwassen and self.voorwasprogramma)
+        self.warmteElement.mark(False, self.temperatuurKnop == self.temperatuurWater and self.voorwassen)
+        self.trommelSnelheid.set(10, self.warmteElement == False and self.pompOpen == False and self.kraanOpen== False and self.trommeldraait == False and self.voorwassenCompleet == False and  self.voorwasprogramma and self.voorwassen)
+        self.trommeldraait.mark(True, self.trommelSnelheid ==10 and self.voorwassenCompleet == False and self.voorwassen and self.voorwasprogramma)
+        self.trommeldraait.mark(False, self.voorwassenCompleet and self.voorwasprogramma)
+        self.voorwassenCompleet.mark(True, self.timerVoorprogramma> 3 and self.voorwasprogramma)
+        self.trommelSnelheid.set(0.,self.voorwassenCompleet and self.timerVoorprogramma >3 and self.voorwasprogramma)
+        self.timerVoorprogramma.reset(self.timerVoorprogramma >3 or self.trommeldraait ==False or self.voorwassenCompleet == True)
+        self.pompOpen.mark(True, self.voorwassenCompleet and self.trommelSnelheid ==0 and self.uitspoelen == False and self.voorwasprogramma)
+        self.uitspoelen.mark(True, self.voorwassenCompleet and self.hoeveelheidWater ==0 and self.voorwasprogramma)
+        self.kraanOpen.mark(True, self.voorwassenCompleet and self.trommelSnelheid ==0 and self.pompOpen == False and self.uitspoelen and self.voorwasprogramma)
+        self.hoeveelheidWater.set(10, self.hoeveelheidWater>10 and self.kraanOpen and self.uitspoelen and self.voorwasprogramma)
+        self.kraanOpen.mark(False, self.hoeveelheidWater == 10 and self.uitspoelen and self.voorwasprogramma)
+        self.trommelSnelheid.set(10, self.hoeveelheidWater ==10 and self.kraanOpen == False and self.pompOpen == False and self.uitspoelen and self.voorwasprogramma)
+        self.trommeldraait.mark(True, self.trommelSnelheid ==10 and self.uitspeolenCompleet == False and self.uitspoelen and self.voorwasprogramma)
+        self.trommeldraait.mark(False, self.uitspeolenCompleet  and self.voorwasprogramma)
+        self.uitspeolenCompleet.mark(True, self.timerUitspoelen> 3  and self.voorwasprogramma)
+        self.trommelSnelheid.set(0.,self.uitspeolenCompleet and self.timerUitspoelen >3 and self.voorwasprogramma)
+        self.pompOpen.mark(True, self.uitspeolenCompleet and self.voorwasprogramma  )
+        self.timerUitspoelen.reset(self.timerUitspoelen >3 or self.trommeldraait ==False or self.uitspeolenCompleet == True)
+        self.timerUitspoelen.reset( self.uitspoelen == False)
 
-        #start het programma naar keuze als het gestard wort
-'''
-from SimPyLC import *
-    def sweep (self):
-        self.hoeveelheidWater.set(self.hoeveelheidWater + 0.5, self.kraanOpen , self.hoeveelheidWater)
-        self.hoeveelheidWater.set(self.hoeveelheidWater - 0.05, self.pompOpen , self.hoeveelheidWater)
-        self.hoeveelheidWater.set(20, self.hoeveelheidWater >20)
-        self.temperatuurWaterKcal.set((self.temperatuurWaterKcal)+1.5,self.warmteElement, self.hoeveelheidWater*4.2)
-        self.temperatuurWater.set(14 + self.temperatuurWaterKcal/self.hoeveelheidWater/4.2)
-warmt het water op
-        self.hoeveelheidWater.set(self.hoeveelheidWater + 0.5, self.kraanOpen , self.hoeveelheidWater)
-        self.hoeveelheidWater.set(self.hoeveelheidWater - 0.05, self.pompOpen , self.hoeveelheidWater)
-        self.hoeveelheidWater.set(20, self.hoeveelheidWater >20)
-        self.temperatuurWater.set((1.5/self.hoeveelheidWater)+self.temperatuurWater, self.warmteElement, self.temperatuurWater)
- water warmt op v2
-'''
+        #hoofdProgramma
+        self.pompOpen.mark(True, self.startKnop and self.hoeveelheidWater >0 and self.zeepHoofdprogramma == False  and self.hoofdporgramma)
+        self.zeepHoofdprogramma.mark(True, self.hoofdProgramma and self.startKnop and self.pompOpen == False and self.hoeveelheidWater == 0 and self.hoofdProgramma)
+        self.hoofdwassen.mark(True, self.hoofdProgramma and self.zeepHoofdprogramma )
+
+
+
+
+
+
+        self.hoeveelheidWater.set(self.hoeveelheidWater +(2*world.period),self.kraanOpen)
+        self.hoeveelheidWater.set(20, self.hoeveelheidWater>20 and self.kraanOpen)
+        self.kraanOpen.mark(False, self.hoeveelheidWater == 20)
+        self.pompOpen.mark(False, self.hoeveelheidWater == 0)
+        self.hoeveelheidWater.set(self.hoeveelheidWater -(2*world.period),self.pompOpen)
+        self.hoeveelheidWater.set(0, self.hoeveelheidWater <0 )
