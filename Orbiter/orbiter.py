@@ -61,7 +61,7 @@ class orbiter (Module):
         #fase 1 versnellingsfase
         self.stuwkrachtRaket.set(100, self.raketFase ==1)
         self.mikpuntRaket.set(self.positieMarsY + 3.6 *10**6, self.raketFase ==1)
-        self.orientatieRaket.set(np.arctan2([self.mikpuntRaket,self.mikpuntRaket],[self.positiRaketeX,self.positieRaketY]))
+        self.orientatieRaket.set()
         #probleem met het bepalen van de hoek van de orbiter
         #fase2 de afremmingsfase
 
